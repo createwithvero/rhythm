@@ -259,6 +259,43 @@ details.prompts li { margin: 4px 0; }
 details.reset-edit > summary { display: flex; align-items: center; gap: 8px; min-height: 48px; font-weight: 700; }
 details.reset-edit > summary .chev { margin-left: auto; }
 details.reset-edit[open] > summary { margin-bottom: 10px; }
+/* ---------- Color blocking ---------- */
+/* Each tab gets its own solid color at the top; card headers are solid bands, bodies stay soft. */
+body { --hero: var(--navy); --hero-ink: #fff; }
+body[data-tab="body"] { --hero: var(--moss); --hero-ink: var(--ink); }
+body[data-tab="calm"] { --hero: var(--aub); --hero-ink: #fff; }
+body[data-tab="journal"] { --hero: var(--yellow); --hero-ink: var(--aub); }
+body[data-tab="week"] { --hero: var(--moss-deep); --hero-ink: #fff; }
+header.top { background: var(--hero); color: var(--hero-ink); margin: 0 -16px 22px; padding: 26px 20px 28px; border-radius: 0 0 28px 28px; }
+header.top .date .dow { color: var(--hero-ink); opacity: .8; }
+header.top .date .day { color: var(--hero-ink); }
+header.top .icon-btn, header.top .desk-btn { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.35); color: var(--hero-ink); }
+header.top .icon-btn svg { stroke: var(--hero-ink); }
+body[data-tab="journal"] header.top .icon-btn, body[data-tab="journal"] header.top .desk-btn,
+body[data-tab="body"] header.top .icon-btn, body[data-tab="body"] header.top .desk-btn { background: rgba(255,255,255,.55); border-color: rgba(0,0,0,.08); }
+
+.card { --band: var(--navy); --band-ink: #fff; }
+.t-navy { --band: var(--navy); --band-ink: #fff; }
+.t-moss { --band: var(--moss); --band-ink: var(--ink); }
+.t-yellow { --band: var(--yellow); --band-ink: var(--aub); }
+.t-aub { --band: var(--aub); --band-ink: #fff; }
+.card > h2, details.card > summary > h2 { background: var(--band); color: var(--band-ink); margin: -20px -20px 16px; padding: 15px 20px; border-radius: 21px 21px 0 0; min-height: 56px; }
+details.card:not([open]) > summary > h2 { margin: -20px; border-radius: 21px; }
+details.card[open] > summary > h2 { margin: -20px -20px 16px; }
+.card > h2 > span:first-child::before, .card > summary > h2 > span:first-child::before { display: none; }
+.card > h2 .count, .card > summary > h2 .count { color: var(--band-ink); opacity: .85; }
+.card > summary > h2 .chev { border-color: var(--band-ink); }
+.card { border: 0; }
+
+/* Fog day toggle turns into a yellow block when it's on */
+.fog[aria-pressed="true"] { background: var(--yellow); border-color: var(--yellow); color: var(--aub); }
+.fog[aria-pressed="true"] .sub { color: var(--aub); opacity: .8; }
+.fog[aria-pressed="true"] .switch { background: var(--aub); }
+
+/* Active tab gets a pill in its tab color */
+.tabbar .inner { padding: 6px 6px 0; gap: 4px; }
+.tabbar button { border-radius: 16px; min-height: 58px; }
+.tabbar button[aria-current="page"] { background: var(--hero); color: var(--hero-ink); }
 </style>
 </head>
 <body>
@@ -500,6 +537,7 @@ function render() {
     </header>
     ${body}`;
   document.querySelectorAll('.tabbar button').forEach(b => b.setAttribute('aria-current', b.dataset.tab === tab ? 'page' : 'false'));
+  document.body.dataset.tab = tab;
 }
 
 // Remembers which folded sections are open, so ticking a box doesn't snap them shut.
