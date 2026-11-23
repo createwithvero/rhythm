@@ -246,7 +246,7 @@ details.past summary { padding: 12px 0 4px; color: var(--navy); font-weight: 600
 .nerr { color: var(--warn); font-size: 14px; }
 details.prompts { margin: -8px 0 8px 46px; }
 details.prompts > summary { display: inline-flex; align-items: center; min-height: 44px; color: var(--navy); font-weight: 650; font-size: 15px; }
-details.prompts ol { margin: 0 0 6px; padding: 12px 14px 12px 34px; border-radius: 14px; background: var(--navy-tint); font-size: 16px; }
+details.prompts ol, details.prompts ul { margin: 0 0 6px; padding: 12px 14px 12px 34px; border-radius: 14px; background: var(--navy-tint); font-size: 16px; }
 details.prompts li { margin: 4px 0; }
 .set-title { display: flex; flex-direction: column; align-items: flex-start; }
 .set-title .back { padding: 0; min-height: 36px; font-size: 16px; }
@@ -666,6 +666,21 @@ function itemNote(which, text) {
   return msg ? `<span class="note ${extra ? 'extra' : ''}">${esc(msg)}</span>` : '';
 }
 
+// What to take, shown under the Vitamins item in the Morning and Night lists.
+const VITAMINS = {
+  morning: ['Sports Research saffron', 'Vitamin D + K2 (with food)', 'B12'],
+  night: ['Omega-3 (Viva Naturals)', 'NOW saw palmetto', 'Magnesium glycinate', 'KSM-66 ashwagandha']
+};
+function vitaminList(which, text) {
+  const list = VITAMINS[which];
+  if (!list || !list.length || text.trim().toLowerCase() !== 'vitamins') return '';
+  const id = 'vit:' + which;
+  return `<details class="prompts" data-id="${id}" ${isOpen(id, false) ? 'open' : ''}>
+    <summary>${list.length} to take<span class="chev"></span></summary>
+    <ul>${list.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+  </details>`;
+}
+
 // Prompts sit under Journal (morning) and Brain dump (night). Fog days show only the first one.
 function journalPrompts(which, text, fog) {
   const j = which === 'morning' ? S().journal : which === 'night' ? S().brainDump : null;
@@ -690,7 +705,7 @@ function checklistCard(which, slot) {
   const done = items.filter(i => d.checks[k(i)]).length;
   const title = which === 'morning' ? 'Morning' : 'Night';
   return `<details class="card cl" data-id="${which}" ${isOpen(which, slot === which) ? 'open' : ''}><summary><h2><span>${title}${d.fog ? ' · fog' : ''}</span> <span class="count">${done} of ${items.length}${CHEV}</span></h2></summary>
-    ${items.map(i => `<button class="check" data-act="check" data-key="${esc(k(i))}" aria-pressed="${!!d.checks[k(i)]}"><span class="box"></span><span class="txt">${esc(i)}${prepItems.includes(i) ? `<span class="note extra">for tomorrow's ${esc(prep.theme)} day</span>` : itemNote(which, i)}</span></button>${itemLink(i)}${journalPrompts(which, i, d.fog)}`).join('') || '<div class="hint">Add items in Settings</div>'}
+    ${items.map(i => `<button class="check" data-act="check" data-key="${esc(k(i))}" aria-pressed="${!!d.checks[k(i)]}"><span class="box"></span><span class="txt">${esc(i)}${prepItems.includes(i) ? `<span class="note extra">for tomorrow's ${esc(prep.theme)} day</span>` : itemNote(which, i)}</span></button>${itemLink(i)}${vitaminList(which, i)}${journalPrompts(which, i, d.fog)}`).join('') || '<div class="hint">Add items in Settings</div>'}
   </details>`;
 }
 
