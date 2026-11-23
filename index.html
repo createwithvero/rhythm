@@ -296,16 +296,16 @@ details.card[open] > summary > h2 { margin: -20px -20px 16px; }
 .tabbar .inner { padding: 6px 6px 0; gap: 4px; }
 .tabbar button { border-radius: 16px; min-height: 58px; }
 .tabbar button[aria-current="page"] { background: var(--hero); color: var(--hero-ink); }
-.plan-morn { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; background: #FDF0E1; border-radius: 12px; padding: 10px 12px; margin: 4px 0 10px; }
-.plan-morn b { font-size: 15px; margin-right: 2px; }
-.plan-day { display: grid; grid-template-columns: 52px 1fr; gap: 10px; align-items: start; padding: 10px 10px 10px 0; border-radius: 12px; }
-.plan-day + .plan-day { border-top: 1px solid var(--line); }
-.plan-day.now { background: color-mix(in srgb, var(--c) 10%, #fff); box-shadow: inset 0 0 0 2px var(--c); border-top-color: transparent; padding-left: 8px; }
-.plan-day.now + .plan-day { border-top-color: transparent; }
-.plan-pill { background: var(--c); color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .05em; text-align: center; border-radius: 999px; padding: 4px 0; margin-top: 2px; }
-.plan-theme { font-weight: 700; font-size: 16px; line-height: 1.25; }
-.plan-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
-.plan-chips span { font-size: 13px; line-height: 1.2; padding: 3px 9px; border-radius: 999px; background: color-mix(in srgb, var(--c, #E08A2E) 12%, #fff); color: var(--ink); }
+.plan-sec { padding: 12px 0; }
+.plan-sec + .plan-sec { border-top: 1px solid var(--line); }
+.plan-sec.morn { background: #FDF0E1; border-radius: 14px; padding: 12px 14px; margin: 4px 0 6px; border-top: 0; }
+.plan-sec.now { background: color-mix(in srgb, var(--c) 9%, #fff); border-radius: 14px; padding: 12px 14px; box-shadow: inset 0 0 0 2px var(--c); border-top-color: transparent; }
+.plan-sec.now + .plan-sec { border-top-color: transparent; }
+.plan-h { display: flex; align-items: center; gap: 10px; }
+.plan-pill { background: var(--c); color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .05em; border-radius: 999px; padding: 4px 10px; flex: none; }
+.plan-theme { font-weight: 800; font-size: 18px; line-height: 1.2; }
+.plan-list { margin: 8px 0 0; padding-left: 22px; font-size: 16px; line-height: 1.5; }
+.plan-list li::marker { color: var(--c); font-weight: 700; }
 </style>
 </head>
 <body>
@@ -541,7 +541,7 @@ function render() {
     body = tab === 'body' ? bodyTab()
       : tab === 'calm' ? resetsCard() + menuCard()
       : tab === 'journal' ? journalTab()
-      : planCard() + weeklyCard() + sundayCard();
+      : planCard() + sundayCard();
   }
   document.getElementById('app').innerHTML = `
     <header class="top">
@@ -703,23 +703,24 @@ function sundayProgress() {
 }
 // ---------- Locked weekly plan (only changes when Veronica changes it; same as the Weekly Vision Board in Notion) ----------
 const WEEK_PLAN = {
-  morning: ['9:45 check-in', '30 min study', 'Apply to briefs on Aspire, Cohley, Insense', '5 pitches'],
+  morning: ['9:45 check-in', 'Study for 30 min', 'Apply to briefs on Aspire, Cohley and Insense', 'Send 5 pitches', 'Then the day\'s theme'],
   days: [
-    ['Mon', 'Admin + Find brands', ['Emails', 'Replies', 'Invoices', 'Find 20 contacts'], '#274980'],
-    ['Tue', 'Script', ['Scripts', 'Captions'], '#8A9A1E'],
-    ['Wed', 'Shoot', ['Talking heads', 'B-roll', 'UGC'], '#B89400'],
-    ['Thu', 'Edit', ['Edit', 'Schedule', '20 min each'], '#B5476A'],
-    ['Fri', 'Buffer', ['Trials setup', 'Catch-up', 'Strategy every other Fri'], '#4A1D3F'],
-    ['Sat', 'Off', ['Rest'], '#9C9399'],
-    ['Sun', 'Reset', ['Vitamins', 'Clean up / reset', 'Hair + face mask', 'Plan week'], '#7A5C3E'],
+    ['Mon', 'Admin + Find brands', ['Emails and replies', 'Invoices', 'Find 20 brand contacts (CWV + GLS)'], '#274980'],
+    ['Tue', 'Script', ['Write scripts', 'Write captions'], '#8A9A1E'],
+    ['Wed', 'Shoot', ['Talking heads', 'B-roll', 'UGC'], '#A88700'],
+    ['Thu', 'Edit', ['Edit videos (20 min each, ship at 70%)', 'Schedule posts'], '#B5476A'],
+    ['Fri', 'Buffer', ['Set up trial reels', 'Catch up on anything left', 'Every other Friday: content strategy + numbers check'], '#4A1D3F'],
+    ['Sat', 'Off', ['Rest, no work'], '#8C8389'],
+    ['Sun', 'Reset', ['Vitamins', 'Clean up / reset', 'Hair mask + face mask', 'Plan the week'], '#7A5C3E'],
   ],
 };
 function planCard() {
   const wd = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][today0().getDay()];
-  const chips = a => `<div class="plan-chips">${a.map(x => `<span>${esc(x)}</span>`).join('')}</div>`;
-  const rows = WEEK_PLAN.days.map(([d, theme, items, c]) => `<div class="plan-day${d === wd ? ' now' : ''}" style="--c:${c}"><div class="plan-pill">${d.toUpperCase()}</div><div><div class="plan-theme">${esc(theme)}</div>${chips(items)}</div></div>`).join('');
+  const full = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
+  const list = (a, tag) => `<${tag} class="plan-list">${a.map(x => `<li>${esc(x)}</li>`).join('')}</${tag}>`;
+  const rows = WEEK_PLAN.days.map(([d, theme, items, c]) => `<div class="plan-sec${d === wd ? ' now' : ''}" style="--c:${c}"><div class="plan-h"><span class="plan-pill">${d.toUpperCase()}</span><span class="plan-theme">${esc(theme)}</span></div>${list(items, 'ul')}</div>`).join('');
   return `<details class="card" data-id="plan" ${isOpen('plan', true) ? 'open' : ''}><summary><h2><span>My weekly plan</span> <span class="count">locked${CHEV}</span></h2></summary>
-    <div class="plan-morn" style="--c:#E08A2E"><b>☀️ Mon–Thu mornings</b>${chips(WEEK_PLAN.morning)}</div>
+    <div class="plan-sec morn" style="--c:#C0661A"><div class="plan-h"><span class="plan-theme">☀️ Mon–Thu mornings</span></div>${list(WEEK_PLAN.morning, 'ol')}</div>
     ${rows}
   </details>`;
 }
