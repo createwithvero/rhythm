@@ -306,6 +306,9 @@ details.card[open] > summary > h2 { margin: -20px -20px 16px; }
 .plan-theme { font-weight: 800; font-size: 18px; line-height: 1.2; }
 .plan-list { margin: 8px 0 0; padding-left: 22px; font-size: 16px; line-height: 1.5; }
 .plan-list li::marker { color: var(--c); font-weight: 700; }
+.plan-night { margin-top: 8px; background: #EEF1F8; border-radius: 10px; padding: 8px 12px; }
+.plan-night b { font-size: 14px; color: #274980; }
+.plan-night .plan-list { margin-top: 4px; font-size: 15px; }
 </style>
 </head>
 <body>
@@ -680,12 +683,14 @@ function journalPrompts(which, text, fog) {
 function checklistCard(which, slot) {
   const d = day();
   const mode = d.fog ? 'fog' : 'normal';
-  const items = S().checklists[which][mode] || [];
+  const prep = which === 'night' ? tomorrowPrep() : null;
+  const prepItems = prep ? prep.items.filter(x => !(S().checklists[which][mode] || []).includes(x)) : [];
+  const items = prepItems.concat(S().checklists[which][mode] || []);
   const k = i => which + ':' + mode + ':' + i;
   const done = items.filter(i => d.checks[k(i)]).length;
   const title = which === 'morning' ? 'Morning' : 'Night';
   return `<details class="card cl" data-id="${which}" ${isOpen(which, slot === which) ? 'open' : ''}><summary><h2><span>${title}${d.fog ? ' · fog' : ''}</span> <span class="count">${done} of ${items.length}${CHEV}</span></h2></summary>
-    ${items.map(i => `<button class="check" data-act="check" data-key="${esc(k(i))}" aria-pressed="${!!d.checks[k(i)]}"><span class="box"></span><span class="txt">${esc(i)}${itemNote(which, i)}</span></button>${itemLink(i)}${journalPrompts(which, i, d.fog)}`).join('') || '<div class="hint">Add items in Settings</div>'}
+    ${items.map(i => `<button class="check" data-act="check" data-key="${esc(k(i))}" aria-pressed="${!!d.checks[k(i)]}"><span class="box"></span><span class="txt">${esc(i)}${prepItems.includes(i) ? `<span class="note extra">for tomorrow's ${esc(prep.theme)} day</span>` : itemNote(which, i)}</span></button>${itemLink(i)}${journalPrompts(which, i, d.fog)}`).join('') || '<div class="hint">Add items in Settings</div>'}
   </details>`;
 }
 
@@ -707,18 +712,26 @@ const WEEK_PLAN = {
   days: [
     ['Mon', 'Admin + Find brands', ['Emails and replies', 'Invoices', 'Find 20 brand contacts (CWV + GLS)'], '#274980'],
     ['Tue', 'Script', ['Write scripts', 'Write captions'], '#8A9A1E'],
-    ['Wed', 'Shoot', ['Talking heads', 'B-roll', 'UGC'], '#A88700'],
-    ['Thu', 'Edit', ['Edit videos (20 min each, ship at 70%)', 'Schedule posts'], '#B5476A'],
+    ['Wed', 'Shoot', ['Talking heads', 'B-roll', 'UGC'], '#A88700', ['Charge camera gear', "Lay out what I'm wearing"]],
+    ['Thu', 'Edit', ['Edit videos (20 min each, ship at 70%)', 'Schedule posts'], '#B5476A', ['Transfer footage']],
     ['Fri', 'Buffer', ['Set up trial reels', 'Catch up on anything left', 'Every other Friday: content strategy + numbers check'], '#4A1D3F'],
     ['Sat', 'Off', ['Rest, no work'], '#8C8389'],
     ['Sun', 'Reset', ['Vitamins', 'Clean up / reset', 'Hair mask + face mask', 'Plan the week'], '#7A5C3E'],
   ],
 };
+// Tonight's prep depends on tomorrow's theme (e.g. charge gear before Shoot day).
+const DAY_KEYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+function tomorrowPrep() {
+  const tk = DAY_KEYS[(today0().getDay() + 1) % 7];
+  const row = WEEK_PLAN.days.find(r => r[0] === tk);
+  return row && row[4] ? { theme: row[1], items: row[4] } : null;
+}
 function planCard() {
   const wd = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][today0().getDay()];
   const full = { Mon: 'Monday', Tue: 'Tuesday', Wed: 'Wednesday', Thu: 'Thursday', Fri: 'Friday', Sat: 'Saturday', Sun: 'Sunday' };
   const list = (a, tag) => `<${tag} class="plan-list">${a.map(x => `<li>${esc(x)}</li>`).join('')}</${tag}>`;
-  const rows = WEEK_PLAN.days.map(([d, theme, items, c]) => `<div class="plan-sec${d === wd ? ' now' : ''}" style="--c:${c}"><div class="plan-h"><span class="plan-pill">${d.toUpperCase()}</span><span class="plan-theme">${esc(theme)}</span></div>${list(items, 'ul')}</div>`).join('');
+  const prevFull = d => full[DAY_KEYS[(DAY_KEYS.indexOf(d) + 6) % 7]];
+  const rows = WEEK_PLAN.days.map(([d, theme, items, c, prep]) => `<div class="plan-sec${d === wd ? ' now' : ''}" style="--c:${c}"><div class="plan-h"><span class="plan-pill">${d.toUpperCase()}</span><span class="plan-theme">${esc(theme)}</span></div>${list(items, 'ul')}${prep ? `<div class="plan-night"><b>🌙 ${prevFull(d)} night</b>${list(prep, 'ul')}</div>` : ''}</div>`).join('');
   return `<details class="card" data-id="plan" ${isOpen('plan', true) ? 'open' : ''}><summary><h2><span>My weekly plan</span> <span class="count">locked${CHEV}</span></h2></summary>
     <div class="plan-sec morn" style="--c:#C0661A"><div class="plan-h"><span class="plan-theme">☀️ Mon–Thu mornings</span></div>${list(WEEK_PLAN.morning, 'ol')}</div>
     ${rows}
